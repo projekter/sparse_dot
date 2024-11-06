@@ -24,11 +24,13 @@ class TestGramMatrix(unittest.TestCase):
         self.mat1_d = self.MATRIX_1.toarray()
 
         gram_ut = np.dot(self.MATRIX_1.toarray().T, self.MATRIX_1.toarray())
-        gram_ut[np.tril_indices(gram_ut.shape[0], k=-1)] = 0.0
+        self.tril = np.tril_indices(gram_ut.shape[0], k=-1)
+        gram_ut[self.tril] = 0.0
         self.gram_ut = gram_ut
 
         gram_ut_t = np.dot(self.MATRIX_1.toarray(), self.MATRIX_1.toarray().T)
-        gram_ut_t[np.tril_indices(gram_ut_t.shape[0], k=-1)] = 0.0
+        self.tril_t = np.tril_indices(gram_ut_t.shape[0], k=-1)
+        gram_ut_t[self.tril_t] = 0.0
         self.gram_ut_t = gram_ut_t
 
 
@@ -52,6 +54,7 @@ class TestGramMatrixSparse(TestGramMatrix):
 
     def test_gram_matrix_d_single(self):
         mat2 = gram_matrix_mkl(self.mat1.astype(self.single_dtype), dense=True)
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
         mat2 = gram_matrix_mkl(
@@ -63,7 +66,7 @@ class TestGramMatrixSparse(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
-        mat2[np.tril_indices(mat2.shape[0], k=-1)] = 0.0
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
         with self.assertRaises(ValueError):
@@ -78,6 +81,7 @@ class TestGramMatrixSparse(TestGramMatrix):
         print(self.mat1)
 
         mat2 = gram_matrix_mkl(self.mat1, dense=True)
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         print(mat2 - self.gram_ut)
         print(mat2[np.tril_indices(mat2.shape[0], k=1)])
 
@@ -92,7 +96,7 @@ class TestGramMatrixSparse(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
-        mat2[np.tril_indices(mat2.shape[0], k=-1)] = 0.0
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut)
 
     def test_gram_matrix_sp_t(self):
@@ -101,6 +105,7 @@ class TestGramMatrixSparse(TestGramMatrix):
 
     def test_gram_matrix_d_t(self):
         mat2 = gram_matrix_mkl(self.mat1, dense=True, transpose=True)
+        mat2[self.tril_t] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut_t)
 
     def test_gram_matrix_csc_sp(self):
@@ -110,6 +115,7 @@ class TestGramMatrixSparse(TestGramMatrix):
     def test_gram_matrix_csc_d(self):
         mat = self.mat1.tocsc()
         mat2 = gram_matrix_mkl(mat, dense=True, cast=True)
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat.toarray(), self.mat1.toarray())
         np_almost_equal(mat2, self.gram_ut)
 
@@ -117,6 +123,7 @@ class TestGramMatrixSparse(TestGramMatrix):
 class TestGramMatrixDense(TestGramMatrix):
     def test_gram_matrix_dd_double(self):
         mat2 = gram_matrix_mkl(self.mat1.toarray(), dense=True)
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut)
 
         mat2 = gram_matrix_mkl(
@@ -128,12 +135,14 @@ class TestGramMatrixDense(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut)
 
     def test_gram_matrix_dd_single(self):
         mat2 = gram_matrix_mkl(
             self.mat1.astype(self.single_dtype).toarray(), dense=True
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
         mat2 = gram_matrix_mkl(
@@ -145,6 +154,7 @@ class TestGramMatrixDense(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
     def test_gram_matrix_dd_double_F(self):
@@ -152,6 +162,7 @@ class TestGramMatrixDense(TestGramMatrix):
             np.asarray(self.mat1.toarray(), order="F"),
             dense=True
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut)
 
         mat2 = gram_matrix_mkl(
@@ -164,6 +175,7 @@ class TestGramMatrixDense(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut)
 
     def test_gram_matrix_dd_single_F(self):
@@ -174,6 +186,7 @@ class TestGramMatrixDense(TestGramMatrix):
             ),
             dense=True,
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
         mat2 = gram_matrix_mkl(
@@ -189,6 +202,7 @@ class TestGramMatrixDense(TestGramMatrix):
             ),
             out_scalar=1.0,
         )
+        mat2[self.tril] = 0.0 # lower triangle is undefined
         np_almost_equal(mat2, self.gram_ut, decimal=5)
 
 

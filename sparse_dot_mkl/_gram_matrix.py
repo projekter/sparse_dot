@@ -93,7 +93,7 @@ def _gram_matrix_sparse(
 
 
 # Dict keyed by ('double_precision_bool', 'complex_bool')
-_mkl_skryd_funcs = {
+_mkl_syrkd_funcs = {
     (False, False): MKL._mkl_sparse_s_syrkd,
     (True, False): MKL._mkl_sparse_d_syrkd,
     (False, True): MKL._mkl_sparse_c_syrkd,
@@ -129,7 +129,7 @@ def _gram_matrix_sparse_to_dense(
     _order_mkl_handle(sp_ref_a)
 
     out_dtype = _output_dtypes[(double_prec, complex_type)]
-    func = _mkl_skryd_funcs[(double_prec, complex_type)]
+    func = _mkl_syrkd_funcs[(double_prec, complex_type)]
 
     out_dim = matrix_a.shape[0 if aat else 1]
 

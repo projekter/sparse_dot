@@ -141,10 +141,14 @@ def _gram_matrix_sparse_to_dense(
 
     if _empty_output_check(matrix_a, matrix_a):
         _destroy_mkl_handle(sp_ref_a)
+        if out is None or (out_scalar is not None and not out_scalar):
+            output_arr.fill(0)
+        elif out_scalar is not None:
+            output_arr *= out_scalar
         return output_arr
 
     scalar = _mkl_scalar(scalar, complex_type, double_prec)
-    out_scalar = _mkl_scalar(out_scalar, complex_type, double_prec)
+    out_scalar = _mkl_scalar(0 if out is None else out_scalar, complex_type, double_prec)
 
     ret_val = func(
         _mkl_sp_transpose_ops[(not aat, complex_type)],
@@ -230,7 +234,7 @@ def _gram_matrix_dense_to_dense(
     # passed structs, so create a C struct if necessary to be passed by
     # reference
     scalar = _mkl_scalar(scalar, complex_type, double_precision)
-    out_scalar = _mkl_scalar(out_scalar, complex_type, double_precision)
+    out_scalar = _mkl_scalar(0 if out is None else out_scalar, complex_type, double_precision)
 
     func(
         layout_a,

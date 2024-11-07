@@ -126,6 +126,14 @@ def _sparse_dot_vector(
     :rtype: np.ndarray
     """
 
+    if (
+        not _is_allowed_sparse_format(mv_a) or
+        not _is_allowed_sparse_format(mv_b)
+    ):
+        raise ValueError(
+            "Only CSR, CSC, and BSR-type sparse matrices are supported"
+        )
+
     _sanity_check(mv_a, mv_b, allow_vector=True)
 
     if _empty_output_check(mv_a, mv_b):
@@ -141,14 +149,7 @@ def _sparse_dot_vector(
 
     mv_a, mv_b = _type_check(mv_a, mv_b, cast=cast)
 
-    if (
-        not _is_allowed_sparse_format(mv_a) or
-        not _is_allowed_sparse_format(mv_b)
-    ):
-        raise ValueError(
-            "Only CSR, CSC, and BSR-type sparse matrices are supported"
-        )
-    elif _is_dense_vector(mv_b):
+    if _is_dense_vector(mv_b):
         return _sparse_dense_vector_mult(
             mv_a,
             mv_b,

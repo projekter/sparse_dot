@@ -136,7 +136,10 @@ def _gram_matrix_sparse_to_dense(
     output_arr = _out_matrix(
         (out_dim, out_dim),
         out_dtype,
-        order="C", out_arr=out)
+        order="C",
+        out_arr=out,
+        initialize_zeros=True
+    )
     _, output_ld = _get_numpy_layout(output_arr)
 
     if _empty_output_check(matrix_a, matrix_a):
@@ -146,9 +149,12 @@ def _gram_matrix_sparse_to_dense(
         elif out_scalar is not None:
             output_arr *= out_scalar
         return output_arr
+    
+    if out is None:
+        out_scalar = 0.
 
     scalar = _mkl_scalar(scalar, complex_type, double_prec)
-    out_scalar = _mkl_scalar(0 if out is None else out_scalar, complex_type, double_prec)
+    out_scalar = _mkl_scalar(out_scalar, complex_type, double_prec)
 
     ret_val = func(
         _mkl_sp_transpose_ops[(not aat, complex_type)],
@@ -169,7 +175,7 @@ def _gram_matrix_sparse_to_dense(
     # matrix. This stupid thing only happens with specific flags
     # I could probably leave it but it's pretty annoying
 
-    if not aat and out is None and not complex_type:
+    if not aat and out is None:
         output_arr[np.tril_indices(output_arr.shape[0], k=-1)] = 0.0
 
     return output_arr
@@ -212,6 +218,13 @@ def _gram_matrix_dense_to_dense(
     :rtype: numpy.ndarray
     """
 
+    if aat and np.iscomplexobj(matrix_a):
+        raise ValueError(
+            "transpose=True with dense complex data currently "
+            "fails with an Intel oneMKL ERROR: "
+            "Parameter 3 was incorrect on entry to cblas_csyrk"
+        )
+
     # Get dimensions
     n, k = matrix_a.shape if aat else matrix_a.shape[::-1]
 
@@ -227,15 +240,16 @@ def _gram_matrix_dense_to_dense(
         (n, n),
         out_dtype,
         order="C" if layout_a == LAYOUT_CODE_C else "F",
-        out_arr=out
+        out_arr=out,
+        initialize_zeros=True
     )
 
     # The complex versions of these functions take void pointers instead of
     # passed structs, so create a C struct if necessary to be passed by
     # reference
     scalar = _mkl_scalar(scalar, complex_type, double_precision)
-    out_scalar = _mkl_scalar(0 if out is None else out_scalar, complex_type, double_precision)
-
+    out_scalar = _mkl_scalar(out_scalar, complex_type, double_precision)
+    
     func(
         layout_a,
         MKL_UPPER,
@@ -247,7 +261,7 @@ def _gram_matrix_dense_to_dense(
         ld_a,
         out_scalar if not complex_type else _ctypes.byref(scalar),
         output_arr,
-        n,
+        n
     )
 
     return output_arr
@@ -318,11 +332,6 @@ def _gram_matrix(
         elif out_scalar is not None:
             out *= out_scalar
         return out
-
-    if np.iscomplexobj(matrix):
-        raise ValueError(
-            "gram_matrix_mkl does not support complex datatypes"
-        )
 
     matrix = _type_check(matrix, cast=cast)
 

@@ -884,7 +884,14 @@ def _mkl_scalar(scalar, complex_type, double_precision):
         return float(scalar)
 
 
-def _out_matrix(shape, dtype, order="C", out_arr=None, out_t=False):
+def _out_matrix(
+    shape,
+    dtype,
+    order="C",
+    out_arr=None,
+    out_t=False,
+    initialize_zeros=False
+):
     """
     Create an undefined matrix or check to make sure that
     the provided output array matches
@@ -906,7 +913,9 @@ def _out_matrix(shape, dtype, order="C", out_arr=None, out_t=False):
     out_t = False if out_t is None else out_t
 
     # If there's no output array allocate a new array and return it
-    if out_arr is None:
+    if out_arr is None and initialize_zeros:
+        return _np.zeros(shape, dtype=dtype, order=order)
+    elif out_arr is None:
         return _np.ndarray(shape, dtype=dtype, order=order)
 
     # Check and make sure the order is correct
